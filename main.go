@@ -108,47 +108,8 @@ func RunCode(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(resp)
 }
 
-func channelEx1() {
-
-	c1 := make(chan string)
-	c2 := make(chan string)
-
-	go func() {
-		// time.Sleep(1 * time.Second)
-		c1 <- "one"
-	}()
-	go func() {
-		// time.Sleep(2 * time.Second)
-		c2 <- "two"
-	}()
-
-	// for i := 0; i < 2; i++ {
-	select {
-	case msg1 := <-c1:
-		fmt.Println("received", msg1)
-	case msg2 := <-c2:
-		fmt.Println("received", msg2)
-	}
-	// }
-}
-func channelEx() {
-	done := make(chan bool)
-	go func() {
-		// time.Sleep(3 * time.Second)
-		done <- true
-	}()
-	// for {
-	select {
-	case val := <-done:
-		fmt.Println(val)
-
-	}
-	// }
-
-}
-
 func main() {
-	// channelEx()
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Welcome to code runner!!")
 	})

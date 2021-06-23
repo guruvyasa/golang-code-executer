@@ -22,12 +22,24 @@ type ExecutionRequest struct {
 }
 
 type OutputResponse struct {
-	err    bool
+	Err    bool
 	Output string
+}
+
+func setupResponse(w *http.ResponseWriter, req *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
 
 func RunCode(w http.ResponseWriter, r *http.Request) {
 	// done := make(chan bool)
+	//cors handling
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	if (*r).Method == "OPTIONS" {
+		return
+	}
 	output := make(chan OutputResponse)
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
@@ -67,8 +79,8 @@ func RunCode(w http.ResponseWriter, r *http.Request) {
 		s, e := cmd.CombinedOutput()
 		if e != nil {
 			fmt.Println("compiler problem", e, s)
-			output <- OutputResponse{err: true, Output: "Compilation Error!"}
-			http.Error(w, e.Error(), http.StatusInternalServerError)
+			output <- OutputResponse{Err: true, Output: "Compilation Error!"}
+			// http.Error(w, e.Error(), http.StatusInternalServerError)
 			return
 
 		}
@@ -90,13 +102,13 @@ func RunCode(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 			http.Error(w, "Server Error", http.StatusInternalServerError)
 		}
-		output <- OutputResponse{err: false, Output: string(out)}
+		output <- OutputResponse{Err: false, Output: string(out)}
 	}()
 	// out := s
 	var resp OutputResponse
 	select {
 	case <-timer.C:
-		resp = OutputResponse{Output: "Timeout error!!"}
+		resp = OutputResponse{Err: true, Output: "Timeout error!!"}
 		// return
 	case resp = <-output:
 		fmt.Println(resp)
